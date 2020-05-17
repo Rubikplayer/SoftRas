@@ -1,5 +1,6 @@
 from .get_points_from_angles import get_points_from_angles
 from .ambient_lighting import ambient_lighting
+from .phong_lighting import phong_lighting
 from .directional_lighting import directional_lighting
 from .load_obj import load_obj
 from .look import look

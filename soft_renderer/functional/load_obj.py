@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from skimage.io import imread
 
-import soft_renderer.cuda.load_textures as load_textures_cuda
+# import soft_renderer.cuda.load_textures as load_textures_cuda
 
 def load_mtl(filename_mtl):
     '''
@@ -97,6 +97,8 @@ def load_textures(filename_obj, filename_mtl, texture_res):
         image = torch.from_numpy(image.copy()).cuda()
         is_update = (np.array(material_names) == material_name).astype(np.int32)
         is_update = torch.from_numpy(is_update).cuda()
+
+        import soft_renderer.cuda.load_textures as load_textures_cuda
         textures = load_textures_cuda.load_textures(image, faces, textures, is_update)
     return textures
 

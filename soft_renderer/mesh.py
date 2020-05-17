@@ -139,10 +139,19 @@ class Mesh(object):
             self.textures = torch.cat((self.textures, self.textures), dim=1)
             self._fill_back = True
 
-    def reset_(self):
+    def reset_(self, bake_lighting_lambda=None):
         self.vertices = self._origin_vertices
         self.faces = self._origin_faces
-        self.textures = self._origin_textures
+
+        if bake_lighting_lambda is None:
+            self.textures = self._origin_textures
+        else:
+            if self.texture_type in ['surface']:
+                raise NotImplementedError
+            elif self.texture_type in ['vertex']:
+                self.textures = bake_lighting_lambda( self._origin_textures, self. vertex_normals)
+            else:
+                raise ValueError('texture type not applicable')
         self._fill_back = False
     
     @classmethod

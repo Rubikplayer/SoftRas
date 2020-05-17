@@ -5,6 +5,14 @@ import numpy as np
 
 
 def ambient_lighting(light, light_intensity=0.5, light_color=(1,1,1)):
+    """
+    Args:
+        light: [nb, :, 3]
+        light_intensity: scalar, as a factor applied on light_color, or [nb,] for differentiable
+        light_color: [nb, 3], if variable then differentiable
+    Returns:
+        light: [nb, :, 3], lighting effect already applied
+    """
     device = light.device
 
     if isinstance(light_color, tuple) or isinstance(light_color, list):

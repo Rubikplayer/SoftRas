@@ -91,6 +91,47 @@ class Transform(nn.Module):
         mesh.vertices = self.transformer(mesh.vertices)
         return mesh
 
+    def transform(self, vertices):
+        # vertices is tensor (B, N, 3)
+        return self.transformer(vertices)
+
+    def set_project_mat(self, P):
+        if self.camera_mode not in ['projection']:
+            raise ValueError('Only projection mode requires project mat (P)')
+        self.transformer.P = P
+
+    def set_project_mat_from_KRT(self, K, R, T):
+        """set projection matrix from KRT matrices
+        Args:
+            K: (B, 3, 3)
+            R: (B, 3, 3) as matrices, or (B, 4) as quaternions
+            T: (B, 3)
+        """
+        if self.camera_mode not in ['projection']:
+            raise ValueError('Only projection mode requires project mat (P)')
+
+        bs = K.shape[0]
+        if R.ndimension() == 3:
+            Rot = R
+        elif R.ndimension() == 2:
+            if R.shape[1] == 4: # quaternion
+                try:
+                    from liegroups.torch import SO3
+                except:
+                    raise ImportError(f"failed to 'from liegroups.torch import SO3'")
+                import torch.nn.functional as F
+                R = F.normalize( R, eps=1e-6 )
+                Rot = SO3.from_quaternion(R).mat
+                if Rot.ndimension() == 2:
+                    Rot = Rot[None, :, :] # liegroups tends to squeeze the results
+            else:
+                raise RuntimeError(f"invalid R.shape = {R.shape}")
+        else:
+            raise RuntimeError(f"invalid R.ndimension() = {R.ndimension()}")
+
+        P = torch.bmm( K, torch.cat( (Rot, T.view(-1, 3, 1)), dim=2 ) )
+        self.transformer.P = P
+
     def set_eyes_from_angles(self, distances, elevations, azimuths):
         if self.camera_mode not in ['look', 'look_at']:
             raise ValueError('Projection does not need to set eyes')
